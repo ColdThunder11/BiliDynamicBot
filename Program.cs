@@ -19,11 +19,12 @@ namespace BiliDymicBot
         public static HookBot bot;
         public static bool EnableStatePush;
         public static int RetryCount = 0;
+        public static string UID;
         static void Main(string[] args)
         {
             if (!File.Exists("config.json"))
             {
-                var configStr = JsonConvert.SerializeObject(new Config(),Formatting.Indented);
+                var configStr = JsonConvert.SerializeObject(new Config(), Formatting.Indented);
                 File.WriteAllText("config.json", configStr);
                 System.Environment.Exit(0);
             }
@@ -41,8 +42,8 @@ namespace BiliDymicBot
                 Console.ReadKey();
                 System.Environment.Exit(0);
             }
-            var djo= GetDynamic();
-            lastDynamicId = djo["data"]["cards"][0]["desc"]["dynamic_id"].ToString();
+            var djo = GetDynamic();
+            lastDynamicId = djo["data"]["cards"][2]["desc"]["dynamic_id"].ToString();
             Console.WriteLine("Init success.");
             if (EnableStatePush) bot.SendMessage("B站动态推送机器人正在运行！");
             timer = new Timer(TimerCallBack, null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
@@ -68,15 +69,15 @@ namespace BiliDymicBot
             var s = t2.Result;
             var jo = JsonConvert.DeserializeObject<JObject>(s);
             string qrUrl = jo["data"]["url"].ToString();
-            string oauthKey= jo["data"]["oauthKey"].ToString();
-            var encodQrUrl= HttpUtility.UrlEncode(qrUrl, Encoding.UTF8);
+            string oauthKey = jo["data"]["oauthKey"].ToString();
+            var encodQrUrl = HttpUtility.UrlEncode(qrUrl, Encoding.UTF8);
             Console.WriteLine("QL Code Url is:\nhttp://qr.liantu.com/api.php?text=" + encodQrUrl);
             Console.WriteLine("Please press Enter after you confirm your login. The time limit is 180s.");
             Console.ReadLine();
             var postValuePairs = new List<KeyValuePair<string, string>>();
             postValuePairs.Add(new KeyValuePair<string, string>("oauthKey", oauthKey));
             var encodedContent = new FormUrlEncodedContent(postValuePairs);
-            t = http.PostAsync(new Uri(@"http://passport.bilibili.com/qrcode/getLoginInfo"),encodedContent);
+            t = http.PostAsync(new Uri(@"http://passport.bilibili.com/qrcode/getLoginInfo"), encodedContent);
             t.Wait();
             result = t.Result;
             t2 = result.Content.ReadAsStringAsync();
@@ -86,13 +87,16 @@ namespace BiliDymicBot
             var status = jo["status"].ToString();
             if (status == "True")
             {
+                var dataStr = jo["data"].ToString();
+                UID = dataStr.Split('=')[1].Replace("&DedeUserID__ckMd5", String.Empty);
+                var dataJo = JsonConvert.DeserializeObject<JObject>(jo["data"].ToString());
                 return true;
             }
             else return false;
         }
         static JObject GetDynamic()
         {
-            var t = http.GetAsync(new Uri(@"https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/dynamic_new?uid=37366367&type_list=268435455"));
+            var t = http.GetAsync(new Uri(@"https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/dynamic_new?uid=" + UID + "&type_list=268435455"));
             t.Wait();
             var result = t.Result;
             var t2 = result.Content.ReadAsStringAsync();
@@ -104,7 +108,7 @@ namespace BiliDymicBot
         static string GetBvid(string aid)
         {
             var http = new HttpClient();
-            var t = http.GetAsync(new Uri(@"http://api.bilibili.com/x/web-interface/archive/stat?aid="+aid));
+            var t = http.GetAsync(new Uri(@"http://api.bilibili.com/x/web-interface/archive/stat?aid=" + aid));
             t.Wait();
             var result = t.Result;
             var t2 = result.Content.ReadAsStringAsync();
@@ -117,7 +121,7 @@ namespace BiliDymicBot
         }
         static void TimerCallBack(Object state)
         {
-            var djo= GetDynamic();
+            var djo = GetDynamic();
             JArray dja = null;
             string lastdid = null;
             try
@@ -143,7 +147,7 @@ namespace BiliDymicBot
                 }
                 else
                 {
-                    Console.WriteLine("动态拉取失败，等待重试 第"+RetryCount+"次");
+                    Console.WriteLine("动态拉取失败，等待重试 第" + RetryCount + "次");
                 }
                 var nnextTime = DateTime.Now.AddSeconds(60);
                 timer.Change(nnextTime.Subtract(DateTime.Now), Timeout.InfiniteTimeSpan);
@@ -200,7 +204,7 @@ namespace BiliDymicBot
                                     var ddesc = originJo["item"]["description"].ToString();
                                     //string result = Uri.UnescapeDataString(desc);
                                     sb.Append("\n>>>");
-                                    sb.Append(ddesc.Replace("\r\n","\n>>>").Replace("\n", "\n>>>"));
+                                    sb.Append(ddesc.Replace("\r\n", "\n>>>").Replace("\n", "\n>>>"));
                                     osucf = true;
                                 }
                                 catch { }
@@ -250,9 +254,11 @@ namespace BiliDymicBot
                                 catch { }
                             }
 
-                        } catch { }
+                        }
+                        catch { }
                         successf = true;
-                    } catch { }
+                    }
+                    catch { }
                 }
                 if (!successf)
                 {
