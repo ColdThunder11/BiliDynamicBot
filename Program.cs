@@ -43,7 +43,7 @@ namespace BiliDymicBot
                 System.Environment.Exit(0);
             }
             var djo = GetDynamic();
-            lastDynamicId = djo["data"]["cards"][3]["desc"]["dynamic_id"].ToString();
+            lastDynamicId = djo["data"]["cards"][0]["desc"]["dynamic_id"].ToString();
             Console.WriteLine("Init success.");
             if (EnableStatePush) bot.SendMessage("B站动态推送机器人正在运行！");
             timer = new Timer(TimerCallBack, null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
