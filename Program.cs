@@ -43,7 +43,7 @@ namespace BiliDymicBot
                 System.Environment.Exit(0);
             }
             var djo = GetDynamic();
-            lastDynamicId = djo["data"]["cards"][2]["desc"]["dynamic_id"].ToString();
+            lastDynamicId = djo["data"]["cards"][0]["desc"]["dynamic_id"].ToString();
             Console.WriteLine("Init success.");
             if (EnableStatePush) bot.SendMessage("B站动态推送机器人正在运行！");
             timer = new Timer(TimerCallBack, null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
@@ -159,9 +159,33 @@ namespace BiliDymicBot
                 bool successf = false;
                 if (did == lastDynamicId) break;
                 var sb = new StringBuilder();
-                sb.Append("UP主:");
-                sb.Append(dja[count]["desc"]["user_profile"]["info"]["uname"].ToString());
-                sb.Append("\n");
+                try
+                {
+                    if (dja[count]["desc"]["user_profile"]["info"]["uname"] != null)
+                    {
+                        var upName = dja[count]["desc"]["user_profile"]["info"]["uname"].ToString();
+                        sb.Append("UP主:");
+                        sb.Append(upName);
+                        sb.Append("\n");
+                    }
+                }
+                catch
+                {
+                    string epCardStr = dja[count]["card"].ToString();
+                    JObject epJo = JsonConvert.DeserializeObject<JObject>(epCardStr);
+                    var epName = epJo["apiSeasonInfo"]["title"].ToString();
+                    var epTitle = epJo["new_desc"].ToString();
+                    sb.Append("番剧：");
+                    sb.Append(epName);
+                    sb.Append("更新了！\n");
+                    sb.Append(epTitle);
+                    sb.Append("\n");
+                    sb.Append(GetBvid(epJo["aid"].ToString()));
+                    var epPushStr = sb.ToString();
+                    Console.WriteLine(epPushStr);
+                    bot.SendMessage(epPushStr);
+                    continue;
+                }
                 string cardStr = dja[count]["card"].ToString();
                 JObject cjo = JsonConvert.DeserializeObject<JObject>(cardStr);
                 //for dynamic with picture
@@ -253,6 +277,19 @@ namespace BiliDymicBot
                                 }
                                 catch { }
                             }
+                            if (!osucf)
+                            {
+                                try
+                                {
+                                    var authNmae = originJo["author"].ToString();
+                                    var auTitle = originJo["title"].ToString();
+                                    sb.Append("\n");
+                                    sb.Append(">>>发布了音频：");
+                                    sb.Append(auTitle);
+                                    osucf = true;
+                                }
+                                catch { }
+                            }
 
                         }
                         catch { }
@@ -287,6 +324,18 @@ namespace BiliDymicBot
                         sb.Append(cvTitle);
                         sb.Append("\n");
                         sb.Append(cjo["dynamic"].ToString());
+                        successf = true;
+                    }
+                    catch { }
+                }
+                if (!successf)
+                {
+                    try
+                    {
+                        var authNmae = cjo["author"].ToString();
+                        var auTitle = cjo["title"].ToString();
+                        sb.Append("发布了音频：");
+                        sb.Append(auTitle);
                         successf = true;
                     }
                     catch { }
