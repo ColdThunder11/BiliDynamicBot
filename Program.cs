@@ -43,7 +43,7 @@ namespace BiliDymicBot
                 System.Environment.Exit(0);
             }
             var djo = GetDynamic();
-            lastDynamicId = djo["data"]["cards"][0]["desc"]["dynamic_id"].ToString();
+            lastDynamicId = djo["data"]["cards"][3]["desc"]["dynamic_id"].ToString();
             Console.WriteLine("Init success.");
             if (EnableStatePush) bot.SendMessage("B站动态推送机器人正在运行！");
             timer = new Timer(TimerCallBack, null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
@@ -256,8 +256,13 @@ namespace BiliDymicBot
                                     sb.Append(vTitle);
                                     sb.Append("\n>>>");
                                     sb.Append(GetBvid(aid));
-                                    sb.Append("\n>>>");
-                                    sb.Append(originJo["dynamic"].ToString().Replace("\r\n", "\n>>>").Replace("\n", "\n>>>"));
+                                    try
+                                    {
+                                        var dynamicStr = originJo["dynamic"].ToString();
+                                        sb.Append("\n>>>");
+                                        sb.Append(dynamicStr.Replace("\r\n", "\n>>>").Replace("\n", "\n>>>"));
+                                    }
+                                    catch { }
                                     osucf = true;
                                 }
                                 catch { }
@@ -271,8 +276,15 @@ namespace BiliDymicBot
                                     sb.Append("\n");
                                     sb.Append(">>>发表了专栏：");
                                     sb.Append(cvTitle);
-                                    sb.Append("\n>>>");
-                                    sb.Append(originJo["dynamic"].ToString().Replace("\r\n", "\n>>>").Replace("\n", "\n>>>"));
+                                    try
+                                    {
+                                        var dynamicStr = cjo["dynamic"].ToString();
+                                        sb.Append("\n>>>");
+                                        sb.Append(dynamicStr.Replace("\r\n", "\n>>>").Replace("\n", "\n>>>"));
+                                    }
+                                    catch { }
+                                    sb.Append("\n>>>概要：");
+                                    sb.Append(cjo["summary"].ToString().Replace("\r\n", "\n>>>").Replace("\n", "\n>>>"));
                                     osucf = true;
                                 }
                                 catch { }
@@ -308,8 +320,13 @@ namespace BiliDymicBot
                         sb.Append(vTitle);
                         sb.Append("\n");
                         sb.Append(GetBvid(aid));
-                        sb.Append("\n");
-                        sb.Append(cjo["dynamic"].ToString());
+                        try
+                        {
+                            var dynamicStr = cjo["dynamic"].ToString();
+                            sb.Append("\n");
+                            sb.Append(dynamicStr);
+                        }
+                        catch { }
                         successf = true;
                     }
                     catch { }
@@ -322,8 +339,15 @@ namespace BiliDymicBot
                         var cvTitle = cjo["title"].ToString();
                         sb.Append("发表了专栏：");
                         sb.Append(cvTitle);
-                        sb.Append("\n");
-                        sb.Append(cjo["dynamic"].ToString());
+                        try
+                        {
+                            var dynamicStr = cjo["dynamic"].ToString();
+                            sb.Append("\n");
+                            sb.Append(dynamicStr);
+                        }
+                        catch { }
+                        sb.Append("\n概要：");
+                        sb.Append(cjo["summary"].ToString());
                         successf = true;
                     }
                     catch { }
